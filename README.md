@@ -5,7 +5,7 @@ An SDK to calculate and execute swaps on the Danogo liquidity platform on the Ca
 ## Installation
 
 ```bash
-npm install dungton
+npm install danogo-clmm-sdk
 ```
 
 ## Usage
@@ -14,30 +14,36 @@ npm install dungton
 
 This SDK relies on `@lucid-evolution/lucid` for wallet management and transaction building.
 
-### 1. Fetch Liquidity Pools
+### Initialization
 
-Retrieve a list of available liquidity pools.
+Initialize the SDK with the Danogo API URL. Optionally, you can provide a custom pool script hash.
 
 ```typescript
-import { DanogoSwap } from "dungton";
+import { DanogoSwap } from "danogo-clmm-sdk";
 
-const API_PUBLIC_URL = "http://127.0.0.1:10082/api/v1/get-concentrated-pool-swap-params";
-const API_POOL_URL = "https://liquidity-pair-indexer.dev.tekoapis.net";
-const sdk = new DanogoSwap(API_PUBLIC_URL, API_POOL_URL);
+const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
+const sdk = new DanogoSwap(API_PUBLIC_URL);
+```
 
+### 1. Fetch Liquidity Pools (API)
+
+Retrieve a list of available liquidity pools from the API.
+
+```typescript
 const limit = 10;
 const offset = "0"; // Pagination cursor
 
 // Optional: Filter by token policyID + hexName
-const tokenA = "token_A"; 
-const tokenB = "token_B";
+const tokenA = "tokenA"; 
+const tokenB = "tokenB";
 
 const pools = await sdk.getLiquidityPools(limit, offset, tokenA, tokenB);
 
-if (pools.length > 0) {
-  console.log("Pool ID:", pools[0].outRef);
-  console.log("Pool Assets:", pools[0].multiAssets);
-}
+pools.forEach(pool => {
+  console.log("Pool ID:", pool.outRef);
+  console.log("Token A:", pool.tokenA);
+  console.log("Token B:", pool.tokenB);
+});
 ```
 
 ### 2. Calculate Swap Output (Preview)
@@ -45,11 +51,10 @@ if (pools.length > 0) {
 Calculate the expected output of a swap without submitting a transaction. This is useful for UI previews or checking rates.
 
 ```typescript
-import { DanogoSwap } from "dungton";
+import { DanogoSwap } from "danogo-clmm-sdk";
 
-const API_PUBLIC_URL = "http://127.0.0.1:10082/api/v1/get-concentrated-pool-swap-params";
-const API_POOL_URL = "https://liquidity-pair-indexer.dev.tekoapis.net";
-const sdk = new DanogoSwap(API_PUBLIC_URL, API_POOL_URL);
+const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
+const sdk = new DanogoSwap(API_PUBLIC_URL);
 
 const poolId = "your_pool_id_here"; // e.g., "txHash#index"
 // Positive string: Selling Token Y -> Buying Token X
@@ -69,12 +74,11 @@ try {
 Build and submit a swap transaction using a Lucid instance.
 
 ```typescript
-import { DanogoSwap } from "dungton";
+import { DanogoSwap } from "danogo-clmm-sdk";
 import { Lucid, Kupmios } from "@lucid-evolution/lucid";
 
-const API_PUBLIC_URL = "http://127.0.0.1:10082/api/v1/get-concentrated-pool-swap-params";
-const API_POOL_URL = "https://liquidity-pair-indexer.dev.tekoapis.net";
-const sdk = new DanogoSwap(API_PUBLIC_URL, API_POOL_URL);
+const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
+const sdk = new DanogoSwap(API_PUBLIC_URL);
 
 async function main() {
   // 1. Initialize Lucid with your provider (recommend Kupmios)

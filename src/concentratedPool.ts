@@ -7,14 +7,12 @@ export interface ConcentratedPool {
   coin: string;
   multiAssets: ApiMultiAsset[];
   refScriptCborHex?: string | null;
-  lpToken: string;
   lpTokenTotalSupply: string;
   tokenA: string;
   tokenAReserve: string;
   tokenB: string;
   tokenBReserve: string;
   lpFee: number;
-  licenseNft: string;
   platformFeeRate: number;
   priceLowerNum: string;
   priceLowerDen: string;

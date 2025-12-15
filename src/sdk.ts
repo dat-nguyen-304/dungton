@@ -288,7 +288,17 @@ export class DanogoSwap {
     }
   }
 
-  getPool(
+  /**
+   * Extracts concentrated liquidity pool data from a given Ogmios transaction.
+   *
+   * This method scans the transaction outputs for tokens associated with the configured
+   * pool script hash. When a pool NFT is detected, it decodes the inline datum and
+   * assets to return a structured `ConcentratedPool` object.
+   *
+   * @param tx The transaction object conforming to the Ogmios schema.
+   * @returns An array of `ConcentratedPool` objects found in the transaction outputs.
+   */
+  getPoolsFromOgmiosTx(
     tx: Transaction,
   ): ConcentratedPool[] {
     const concentratedPools: ConcentratedPool[] = [];
@@ -328,14 +338,12 @@ export class DanogoSwap {
               multiAssets,
               validityNft: poolNft,
               refScriptCborHex: null,
-              lpToken: "",
               lpTokenTotalSupply: datumFields.circulatingLPToken,
               tokenA,
               tokenAReserve: getTokenReserve(tokenA),
               tokenB,
               tokenBReserve: getTokenReserve(tokenB),
               lpFee: datumFields.lpFeeRate,
-              licenseNft: "",
               platformFeeRate: 0,
               priceLowerNum: datumFields.sqrtLowerPriceNum,
               priceLowerDen: datumFields.sqrtLowerPriceDen,
@@ -354,5 +362,3 @@ export class DanogoSwap {
     return concentratedPools;
   }
 }
-
-
