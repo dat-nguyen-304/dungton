@@ -1,13 +1,13 @@
 import { RedeemerBuilder, UTxO } from "@lucid-evolution/lucid";
 
 /**
- * Converts a non-negative BigInt to a big-endian byte array (Uint8Array) of a specific length.
- * @param n The non-negative BigInt to convert.
+ * Converts a BigInt to a big-endian byte array (Uint8Array) of a specific length.
+ * @param n The BigInt to convert.
  * @param length The desired length of the output byte array.
  * @returns A Uint8Array representing the BigInt, padded with leading zeros if necessary.
  */
 export function bigintToBytesPadded(n: bigint, length: number): Uint8Array {
-  // if n is negative, n is deltaAmount
+  // if n is negative, n only can be deltaAmount
   // add 2^256 (32 bytes) to get positive number represent deltaAmount
   const unSignNum = n >= 0n ? n : n + (1n << 256n);
 

@@ -1,6 +1,6 @@
 import { Data } from "@lucid-evolution/lucid";
 import { PoolDatum } from "./lpResponse.js";
-import { encodeData } from "./schema.js";
+import { encodeData } from "./encode.js";
 import * as cbor from "cbor";
 
 export const transformPoolDatum = (datum: PoolDatum): string => {
@@ -57,7 +57,6 @@ export const transformPoolDatum = (datum: PoolDatum): string => {
   return encodeData(dataArray, PoolDatumSchema);
 };
 
-// Enhanced tokenIdToTuple with better error handling
 export const tokenIdToTuple = (tokenId: string): [string, string] => {
   if (!tokenId) return ["", ""];
 

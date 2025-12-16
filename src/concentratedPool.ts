@@ -2,18 +2,15 @@ import { ApiMultiAsset } from "./lpResponse";
 
 export interface ConcentratedPool {
   outRef: string;
-  validityNft: string;
   address: string;
   coin: string;
   multiAssets: ApiMultiAsset[];
-  refScriptCborHex?: string | null;
-  lpTokenTotalSupply: string;
+  validityNft: string;
   tokenA: string;
   tokenAReserve: string;
   tokenB: string;
   tokenBReserve: string;
-  lpFee: number;
-  platformFeeRate: number;
+  lpFeeRate: number;
   priceLowerNum: string;
   priceLowerDen: string;
   priceUpperNum: string;
@@ -22,6 +19,7 @@ export interface ConcentratedPool {
   platformFeeB: string;
   minAChange: string;
   minBChange: string;
+  lpTokenTotalSupply: string;
   lastWithdrawEpoch: number;
 }
 

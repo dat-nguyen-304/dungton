@@ -7,7 +7,6 @@ import {
 } from "@lucid-evolution/lucid";
 import {
   getSwapParameters,
-  ApiMultiAsset,
   ApiResponse,
   ApiUtxo,
   PoolDatum,
@@ -18,11 +17,11 @@ import {
 import { apiToAssets, apiToRefUtxo, apiToUtxo } from "./convertApi.js";
 import { swapTokensRedeemer } from "./redeemer.js";
 import { parseDatum, transformPoolDatum } from "./datum.js";
-import { buildMultiAssetsFromAssets } from "./multiAssets.js";
-import axios from "axios";
+import { buildMultiAssetsFromAssets, MultiAsset } from "./multiAssets.js";
 import { ConcentratedPool, DanogoPools } from "./concentratedPool.js";
+import axios from "axios";
 
-export class DanogoSwap {
+class DanogoSwap {
   constructor(
     public apiPublicUrl: string,
     public poolScriptHash: string = "273a576a5de694ff507765c57b47efdc81ea7f13a43dc4441644fab0"
@@ -36,8 +35,8 @@ export class DanogoSwap {
    *
    * @param poolId The ID of the liquidity pool.
    * @param deltaAmount The amount of the input token to swap.
-   *                    - A negative string (e.g., "-1000000") indicates you are selling Token X to receive Token Y.
-   *                    - A positive string (e.g., "1000000") indicates you are selling Token Y to receive Token X.
+   *                    - A positive string (e.g., "1000000") indicates User sells Token X to receive Token Y.
+   *                    - A negative string (e.g., "-1000000") indicates User sells Token Y to receive Token X.
    * @returns A promise that resolves to a `bigint` representing the amount of the output token you will receive.
    */
   async calculateSwapOut(poolId: string, deltaAmount: string): Promise<bigint> {
@@ -102,7 +101,7 @@ export class DanogoSwap {
    *
    * @param lucid An initialized Lucid instance with a connected wallet.
    * @param poolId The ID of the liquidity pool.
-   * @param deltaAmount The amount to swap (negative for Token X -> Y, positive for Y -> X).
+   * @param deltaAmount The amount to swap (positive for User sells X -> Y, negative for User sells Y -> X).
    * @returns A promise that resolves to the transaction hash.
    */
   async submitSwap(
@@ -264,7 +263,7 @@ export class DanogoSwap {
           sqrtLowerPriceDen: pool.priceLowerDen,
           sqrtUpperPriceNum: pool.priceUpperNum,
           sqrtUpperPriceDen: pool.priceUpperDen,
-          lpFeeRate: pool.lpFee,
+          lpFeeRate: pool.lpFeeRate,
           platformFeeX: pool.platformFeeA,
           platformFeeY: pool.platformFeeB,
           minXChange: pool.minAChange,
@@ -313,11 +312,11 @@ export class DanogoSwap {
             const poolNft = this.poolScriptHash + assetName;
             const outRef = `${tx.id}#${index}`;
             const coin = val.ada.lovelace.toString();
-            const multiAssets = buildMultiAssetsFromAssets(val) as ApiMultiAsset[];
-            const datumFields = parseDatum(utxo.datum) as PoolDatum;
+            const multiAssets: MultiAsset[] = buildMultiAssetsFromAssets(val);
+            const datum: PoolDatum = parseDatum(utxo.datum);
 
-            const tokenA = datumFields.tokenX;
-            const tokenB = datumFields.tokenY;
+            const tokenA = datum.tokenX;
+            const tokenB = datum.tokenY;
 
             const getTokenReserve = (tokenId: string) => {
               const id = tokenId.replace(".", "");
@@ -337,23 +336,21 @@ export class DanogoSwap {
               coin,
               multiAssets,
               validityNft: poolNft,
-              refScriptCborHex: null,
-              lpTokenTotalSupply: datumFields.circulatingLPToken,
               tokenA,
               tokenAReserve: getTokenReserve(tokenA),
               tokenB,
               tokenBReserve: getTokenReserve(tokenB),
-              lpFee: datumFields.lpFeeRate,
-              platformFeeRate: 0,
-              priceLowerNum: datumFields.sqrtLowerPriceNum,
-              priceLowerDen: datumFields.sqrtLowerPriceDen,
-              priceUpperNum: datumFields.sqrtUpperPriceNum,
-              priceUpperDen: datumFields.sqrtUpperPriceDen,
-              platformFeeA: datumFields.platformFeeX,
-              platformFeeB: datumFields.platformFeeY,
-              minAChange: datumFields.minXChange,
-              minBChange: datumFields.minYChange,
-              lastWithdrawEpoch: datumFields.lastWithdrawEpoch,
+              lpFeeRate: datum.lpFeeRate,
+              priceLowerNum: datum.sqrtLowerPriceNum,
+              priceLowerDen: datum.sqrtLowerPriceDen,
+              priceUpperNum: datum.sqrtUpperPriceNum,
+              priceUpperDen: datum.sqrtUpperPriceDen,
+              platformFeeA: datum.platformFeeX,
+              platformFeeB: datum.platformFeeY,
+              minAChange: datum.minXChange,
+              minBChange: datum.minYChange,
+              lpTokenTotalSupply: datum.circulatingLPToken,
+              lastWithdrawEpoch: datum.lastWithdrawEpoch,
             });
           }
         }
@@ -362,3 +359,5 @@ export class DanogoSwap {
     return concentratedPools;
   }
 }
+
+export default DanogoSwap;

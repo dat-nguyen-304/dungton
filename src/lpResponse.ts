@@ -3,7 +3,7 @@ import axios from "axios";
 export async function getSwapParameters(
   poolId: string,
   deltaAmount: string,
-  apiUrl: string = "http://127.0.0.1:10082/api/v1/get-concentrated-pool-swap-params",
+  apiUrl: string,
 ): Promise<ApiData> {
   const apiRequestBody = {
     poolId,

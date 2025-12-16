@@ -19,7 +19,7 @@ This SDK relies on `@lucid-evolution/lucid` for wallet management and transactio
 Initialize the SDK with the Danogo API URL. Optionally, you can provide a custom pool script hash.
 
 ```typescript
-import { DanogoSwap } from "danogo-clmm-sdk";
+import DanogoSwap from "danogo-clmm-sdk";
 
 const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
 const sdk = new DanogoSwap(API_PUBLIC_URL);
@@ -51,14 +51,14 @@ pools.forEach(pool => {
 Calculate the expected output of a swap without submitting a transaction. This is useful for UI previews or checking rates.
 
 ```typescript
-import { DanogoSwap } from "danogo-clmm-sdk";
+import DanogoSwap from "danogo-clmm-sdk";
 
 const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
 const sdk = new DanogoSwap(API_PUBLIC_URL);
 
 const poolId = "your_pool_id_here"; // e.g., "txHash#index"
-// Positive string: Selling Token Y -> Buying Token X
-// Negative string: Selling Token X -> Buying Token Y
+// Positive string: User sells Token X -> buys Token Y
+// Negative string: User sells Token Y -> buys Token X
 const deltaAmount = "1000000"; 
 
 try {
@@ -74,7 +74,7 @@ try {
 Build and submit a swap transaction using a Lucid instance.
 
 ```typescript
-import { DanogoSwap } from "danogo-clmm-sdk";
+import DanogoSwap from "danogo-clmm-sdk";
 import { Lucid, Kupmios } from "@lucid-evolution/lucid";
 
 const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
@@ -92,7 +92,7 @@ async function main() {
 
   const poolId = "your_pool_id_here";
   const deltaAmount = "1000000";
-  const minOutChangeAmount = "900000"; // Minimum amount to receive (slippage protection)
+  const minOutChangeAmount = "900000";
 
   try {
     const txHash = await sdk.submitSwap(lucid, poolId, deltaAmount, minOutChangeAmount);
@@ -115,3 +115,56 @@ Note for Kupmios Users: There is currently a known issue with lucid-evolution wh
       id: null
     };
  ```
+
+
+ ### 4. Get Pool Info from Ogmios Transaction
+
+Extract pool data directly from an Ogmios transaction object.
+
+```typescript
+import DanogoSwap from "danogo-clmm-sdk";
+import { createInteractionContext, createChainSynchronizationClient } from "@cardano-ogmios/client";
+
+const API_PUBLIC_URL = "https://api.danogo.io"; // Replace with actual API URL
+const sdk = new DanogoSwap(API_PUBLIC_URL);
+
+async function main() {
+  const context = await createInteractionContext(
+    console.error,
+    () => console.log("closed"),
+    {
+      connection: {
+        address: {
+          http: "YOUR_HTTP_ENDPOINT",
+          webSocket: "YOUR_WS_ENDPOINT",
+        },
+      },
+    }
+  );
+
+  const client = await createChainSynchronizationClient(context, {
+    rollForward: async ({ block }, requestNext) => {
+      if ("transactions" in block) {
+        for (const tx of block.transactions!) {
+          const pools = sdk.getPoolsFromOgmiosTx(tx);
+          // your logic here
+        }
+      }
+
+      requestNext();
+    },
+
+    rollBackward: async ({ point }, requestNext) => {
+      // ...
+      requestNext();
+    },
+  });
+
+  const checkpoint: Point = {
+    slot: 109847210, // Replace with your slot
+    id: "50b267f93fbd85eccc1737abb06f8d2b96fbe07405dddfad4e303411b2b90706", // Replace with your block hash
+  };
+
+  await client.resume([checkpoint]);
+}
+```
